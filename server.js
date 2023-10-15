@@ -1,16 +1,66 @@
-const express = require('express');
-const cors = require('cors');
+const mongoose = require("mongoose");
+const budgetModel = require("./Data/budgetData");
+const bodyParser = require("body-parser");
+const express = require("express");
+const cors = require("cors");
 const app = express();
 const port = 3000;
 
-app.use(cors());
+const corsOptions = {
+  origin: "http://localhost:3000",
+};
+app.use(cors(corsOptions));
 
-const budget = require('./budget.json');
+app.use(bodyParser.json());
+app.use("/", express.static("public"));
 
-app.get('/budget', (req,res) => {
-    res.json(budget);
+app.get("/expenses", (req, res) => {
+  mongoose.connect("mongodb://127.0.0.1:27017/budgetApp", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to the Database");
+    budgetModel.find({})
+      .then((data) => {
+        res.json(data);
+        console.log(data);
+        mongoose.connection.close();
+      })
+      .catch((connectionError) => {
+        console.error(connectionError);
+      });
+  })
+  .catch((err) => {
+    console.error(err);
+  });
+});
+
+app.post("/expenses", (req, res) => {
+  mongoose.connect("mongodb://127.0.0.1:27017/budgetApp", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to the database");
+    const newItem = new budgetModel(req.body);
+    budgetModel.create(newItem) 
+      .then((data) => {
+        res.json(data);
+        console.log(data);
+        mongoose.connection.close();
+      })
+      .catch((connectionError) => {
+        console.error(connectionError);
+        res.status(400).json({error:'Internal Server error-Validation failed'})
+      });
+  })
+  .catch((err) => {
+    console.error(err);
+    res.status(400).json({error:'Internal Server error'})
+  });
 });
 
 app.listen(port, () => {
-    console.log(`API served at http://localhost:${port}`);
+  console.log(`API served at http://localhost:${port}`);
 });

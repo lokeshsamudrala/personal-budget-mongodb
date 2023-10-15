@@ -161,38 +161,39 @@
             datasets: [
                 {
                     data: [],
-                    backgroundColor: [
-                        '#ffcd56',
-                        '#ff6384',
-                        '#36a2eb',
-                        '#fd6b19',
-                        '#CC0000',
-                        '#45818e',
-                        '#c90076',
-                        '#783f04',
-                        '#f6b26b'
+                    backgroundColor: [  
                     ],
                 }
             ],
             labels: []
         };
 
+        console.log(dataSource);
+
         function createChart() {
-            var ctx = document.getElementById("myChart").getContext("2d");
-            var myPieChart = new Chart(ctx, {
+            var ctx = document.getElementById('myChart').getContext('2d');
+
+            if (window.myPieChart) {
+                window.myPieChart.destroy(); 
+            }
+
+            window.myPieChart = new Chart(ctx, {
                 type: 'pie',
                 data: dataSource
             });
+           
+            console.log(window.myPieChart);
         }
 
         function getBudget(){
-            axios.get('http://localhost:3000/budget')
+            axios.get('http://localhost:3000/expenses')
             .then(function(res){
                 console.log(res);
-                for(var i = 0; i < res.data.myBudget.length; i++){
-                    dataSource.datasets[0].data[i] = res.data.myBudget[i].budget;
-                    dataSource.labels[i] = res.data.myBudget[i].title;
-                }
+                dataSource.labels = res.data.map(item => item.title);
+                dataSource.datasets[0].data = res.data.map(item => item.budget);
+                dataSource.datasets[0].backgroundColor = res.data.map(item => item.color);
+            })
+            .then(function () {
                 createChart();
             });
         }
@@ -209,9 +210,9 @@
         var budgetData = [];
     
         function getBudgetAgain() {
-            axios.get('http://localhost:3000/budget')
+            axios.get('http://localhost:3000/expenses')
                 .then(function (res) {
-                    budgetData = res.data.myBudget;
+                    budgetData = res.data;
                     console.log(budgetData);
                 })
                 .then(function () {
